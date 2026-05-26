@@ -140,11 +140,18 @@ kubectl get secret -A --field-selector type=Opaque -o json | \
   grep -vE "default-token|-token-|sh\.helm|kube-system|kube-public"
 
 # Encrypted-at-rest check (etcd encryption providers)
-# k3s: /var/lib/rancher/k3s/server/cred/encryption-config.json
+# k3s: /var/lib/rancher/k3s/server/cred/encryption-config.json (look for "aescbc" or "aesgcm" provider)
 # kubeadm: --encryption-provider-config flag on kube-apiserver
+
+# Admission control beyond k8s defaults (Kyverno, OPA/Gatekeeper, kube-bench-style)
+kubectl get crd 2>/dev/null | grep -iE "kyverno|gatekeeper|polic" | head -10
+kubectl get validatingadmissionpolicy 2>/dev/null | head -5
+
+# Pod Security Admission labels on workload namespaces (post-PSP replacement)
+kubectl get ns -o json | jq -r '.items[] | select(.metadata.name | test("^(kube-|gpu-|default$)") | not) | "\(.metadata.name) enforce=\(.metadata.labels["pod-security.kubernetes.io/enforce"] // "MISSING") audit=\(.metadata.labels["pod-security.kubernetes.io/audit"] // "MISSING")"'
 ```
 
-**Capture:** custom wildcard roles, workloads using default SA, Opaque secret count by namespace, presence of SealedSecrets / external-secrets / vault integration, etcd encryption state.
+**Capture:** custom wildcard roles, workloads using default SA, Opaque secret count by namespace, presence of SealedSecrets / external-secrets / vault integration, **etcd encryption state (structural; triggers −15 if absent)**, **admission control beyond defaults (structural; triggers −10 if no policy engine)**, **Pod Security Admission labels on workload namespaces (structural; triggers −10 per workload ns missing them)**.
 
 ### Phase 5 — Workload security (3 min)
 
@@ -237,7 +244,7 @@ Write the report to `${K8S_AUDIT_REPORT_DIR}/k8s-infra-audit-YYYY-MM-DD-{session
 
 | Dimension | Starts at | Deductions |
 |---|---:|---|
-| **Security posture** | 100 | −20 per privileged container in a workload namespace, −15 per custom wildcard role, −10 per workload-namespace with 0 NetworkPolicies, −10 per plaintext Opaque secret outside system, −5 per workload using default SA |
+| **Security posture** | 100 | **Infrastructure-absent (structural):** −15 if **etcd encryption** not enabled (any non-toy cluster needs it); −10 if **no admission control beyond k8s defaults** (no Kyverno / OPA-Gatekeeper / similar policy engine); −10 per workload namespace **without Pod Security Admission labels** (the post-PSP replacement; missing `pod-security.kubernetes.io/enforce` label on workload ns is a structural gap). **Workload-specific:** −20 per privileged container in a workload namespace; −15 per custom wildcard role; −10 per workload-namespace with 0 NetworkPolicies; −10 per plaintext Opaque secret outside system; −5 per workload using the default ServiceAccount. |
 | **Operational resilience** | 100 | **Infrastructure-absent (structural):** −20 if **NO backup mechanism** detected at all (no Velero schedule, no backup CronJob, no CSI VolumeSnapshot capability, no external backup operator) — fires even on clusters with zero stateful workloads, because the foundation isn't there. −15 if cluster is **single-node** (no HA control plane; one node failure = full outage). **Workload-specific:** −25 per critical PVC (StatefulSet-backed, or listed in `critical_workloads.pvcs` config) with no backup; −20 if a backup mechanism exists but no successful run in 48 h; −10 per mutable image tag on any workload (`:latest`, `:dev`, `:main`, `:master`, or untagged); −5 per multi-replica workload (replicas>1) without a matching PDB. |
 | **Manifest hygiene (drift)** | 100 | −1 per drifted resource, −1 per orphan, −3 per error, floor at 20 |
 | **Cost & efficiency** | 100 | −5 per idle Deployment (0/0), −5 per long-suspended CronJob (>14 d), −10 per orphan PVC, additional deductions per cluster-specific waste rules in config |
