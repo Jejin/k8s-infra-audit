@@ -11,7 +11,7 @@
       "name": "k8s-infra-audit",
       "description": "Read-only Kubernetes infrastructure audit (drift, security, resilience, hygiene, cost) with McKinsey-style engagement report",
       "category": "sre",
-      "source": ".",
+      "source": "./plugins/k8s-infra-audit",
       "homepage": "https://github.com/Jejin/k8s-infra-audit"
     }
   ]
