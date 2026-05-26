@@ -67,7 +67,7 @@ kubectl get ingress,ingressroute -A 2>/dev/null
 kubectl get svc -A | grep -E "LoadBalancer|NodePort"
 ```
 
-**Capture:** node capacity vs. allocation, namespace list, workload counts per namespace, PV inventory, public-exposure surface (Ingress/IngressRoute + LB + NodePort).
+**Capture:** node capacity vs. allocation, **node count (single-node = structural HA gap, triggers −15 on Operational Resilience)**, namespace list, workload counts per namespace, PV inventory, public-exposure surface (Ingress/IngressRoute + LB + NodePort).
 
 ### Phase 2 — Manifest drift (3-5 min)
 
@@ -198,7 +198,9 @@ kubectl get volumesnapshot -A 2>/dev/null
 kubectl get pvc -A -o custom-columns=NS:.metadata.namespace,NAME:.metadata.name,SIZE:.spec.resources.requests.storage,SC:.spec.storageClassName
 ```
 
-**Capture:** active backup mechanism (Velero / CronJob / VolumeSnapshot / external operator / none), schedule, last success time, PVCs with no backup coverage.
+**Capture:** active backup mechanism (Velero / CronJob / VolumeSnapshot / external operator / **none**), schedule, last success time, PVCs with no backup coverage.
+
+**Important:** if Velero is not installed AND no backup CronJob exists AND no VolumeSnapshotClass is configured AND no external backup operator is detected, the cluster has **zero backup infrastructure**. Record this as a structural finding regardless of whether any stateful workloads currently exist — it triggers the −20 "no backup mechanism" deduction on the Operational Resilience score (see Phase 8). A green-field cluster with no backups is still missing the foundation it needs as workloads land.
 
 ### Phase 7 — Resource health, idle workloads, cost (2 min)
 
@@ -236,7 +238,7 @@ Write the report to `${K8S_AUDIT_REPORT_DIR}/k8s-infra-audit-YYYY-MM-DD-{session
 | Dimension | Starts at | Deductions |
 |---|---:|---|
 | **Security posture** | 100 | −20 per privileged container in a workload namespace, −15 per custom wildcard role, −10 per workload-namespace with 0 NetworkPolicies, −10 per plaintext Opaque secret outside system, −5 per workload using default SA |
-| **Operational resilience** | 100 | −25 per critical PVC (StatefulSet-backed) with no backup, −20 if no successful backup in 48 h, −15 per critical workload with replicas=1 and no PDB, −10 per mutable image tag in production |
+| **Operational resilience** | 100 | **Infrastructure-absent (structural):** −20 if **NO backup mechanism** detected at all (no Velero schedule, no backup CronJob, no CSI VolumeSnapshot capability, no external backup operator) — fires even on clusters with zero stateful workloads, because the foundation isn't there. −15 if cluster is **single-node** (no HA control plane; one node failure = full outage). **Workload-specific:** −25 per critical PVC (StatefulSet-backed, or listed in `critical_workloads.pvcs` config) with no backup; −20 if a backup mechanism exists but no successful run in 48 h; −10 per mutable image tag on any workload (`:latest`, `:dev`, `:main`, `:master`, or untagged); −5 per multi-replica workload (replicas>1) without a matching PDB. |
 | **Manifest hygiene (drift)** | 100 | −1 per drifted resource, −1 per orphan, −3 per error, floor at 20 |
 | **Cost & efficiency** | 100 | −5 per idle Deployment (0/0), −5 per long-suspended CronJob (>14 d), −10 per orphan PVC, additional deductions per cluster-specific waste rules in config |
 

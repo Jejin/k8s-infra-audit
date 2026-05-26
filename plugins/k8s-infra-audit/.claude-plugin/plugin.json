@@ -1,7 +1,7 @@
 {
   "name": "k8s-infra-audit",
   "description": "Read-only Kubernetes infrastructure audit. Compares live cluster against source manifests for drift, scores security/resilience/hygiene/cost (0-100 per dimension), produces a McKinsey-style engagement report with P0-P3 prioritized findings, roadmap, and quick wins. Bundles a manifest drift Python scanner and a raw-data collector for delta audits.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": {
     "name": "Jejin",
     "url": "https://github.com/Jejin"
