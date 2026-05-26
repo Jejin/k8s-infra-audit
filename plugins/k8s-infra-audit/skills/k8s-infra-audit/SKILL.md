@@ -28,7 +28,7 @@ The audit reads its scope and context from (in priority order):
    - Manifest roots: `./manifests`, `./k8s`, `./deploy`, `./infra`, `./helm` (whichever exist in the current working directory)
    - Cluster name: from `kubectl config current-context`
 
-The configuration is loaded by the bundled `drift_audit.py` and `audit_collect.sh` scripts. If you're running on a specific cluster regularly (e.g., your homelab), write a config file once and the audit picks it up every time. See `examples/citadel.config.json` for a working example.
+The configuration is loaded by the bundled `drift_audit.py` and `audit_collect.sh` scripts. If you're running on a specific cluster regularly (e.g., your homelab), write a config file once and the audit picks it up every time. See `examples/homelab.config.json` for a working example.
 
 ## Workflow
 
@@ -401,7 +401,7 @@ node-exporter's textfile collector **panics on startup** if two `.prom` files in
 Grafana panels using the `lastNotNull` reducer on a query that returns an empty vector display "no value" or — worse — the last known good value indefinitely. For backup dashboards, **this silently green-lights broken backups** (the dashboard shows the last successful run forever after the underlying metric stops being emitted).
 
 - **Detect:** backup or health dashboards showing identical values across many recent intervals; cross-check by querying Prometheus directly with `absent(metric_name)`.
-- **Fix:** add a companion alert `ALERT NoBackupMetric IF absent(citadel_backup_last_success_unixtime) FOR 24h`. Don't rely on Grafana reducers as your only health signal.
+- **Fix:** add a companion alert like `ALERT NoBackupMetric IF absent(backup_last_success_unixtime) FOR 24h`. Don't rely on Grafana reducers as your only health signal.
 
 ### "Host-Validation Probe 403" trap
 Apps with strict host validation (Django `ALLOWED_HOSTS`, Express host-header check, Mission Control `MC_ALLOWED_HOSTS`, etc.) reject kubelet's liveness/readiness probes with 403 because kubelet sends the probe with the **pod IP as the Host header**, not the configured public hostname.

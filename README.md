@@ -60,7 +60,7 @@ For a tailored audit, create `~/.config/k8s-infra-audit/config.json`:
 }
 ```
 
-See `examples/config.example.json` for the full schema, and `examples/citadel.config.json` for a working example from a homelab k3s cluster.
+See `examples/config.example.json` for the full schema, and `examples/homelab.config.json` for a working example from a real homelab k3s cluster.
 
 Quick env-var overrides (don't need a config file):
 
@@ -143,4 +143,4 @@ Issues and PRs welcome at https://github.com/Jejin/k8s-infra-audit. Especially i
 
 ## Acknowledgements
 
-Built and battle-tested on a single-node ARM-based k3s homelab. The named anti-patterns each correspond to a real outage or near-miss. The example config (`examples/xxx.config.json`) shows what a "real" config looks like.
+Built and battle-tested on a single-node ARM-based k3s homelab. The named anti-patterns each correspond to a real outage or near-miss. The example config (`examples/homelab.config.json`) shows what a "real" config looks like.

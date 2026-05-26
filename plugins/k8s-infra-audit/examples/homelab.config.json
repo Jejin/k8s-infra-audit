@@ -1,0 +1,51 @@
+{
+  "_comment": "Working example: a homelab k3s cluster running ~16 user namespaces with a custom prefix (`the-*`), source manifests split between a per-workload repo and a legacy bundle directory. Adjust the include patterns, paths, and critical-PVC list to match your own cluster.",
+
+  "cluster_name": "palladium / homelab",
+  "cluster_context": "Single-node k3s on ARM Grace+Blackwell. Network: Tailscale (mgmt plane) + Traefik (data plane) + Authelia 2FA. Secrets: SealedSecrets controller in kube-system; etcd AES-CBC encryption. Storage: local-path provisioner, no CSI. Backups: host-level CronJob system writing to Cloudflare R2.",
+
+  "namespaces": {
+    "include": [
+      "the-*",
+      "caretta",
+      "velero"
+    ],
+    "exclude": []
+  },
+
+  "manifest_roots": [
+    "/home/USER/repos/infra/the-forge",
+    "/home/USER/repos/infra/manifests"
+  ],
+
+  "report_dir": "~/.claude/plans",
+
+  "scoring_weights": {
+    "security": 0.35,
+    "resilience": 0.30,
+    "hygiene": 0.20,
+    "cost": 0.15
+  },
+
+  "critical_workloads": {
+    "_comment": "PVCs of stateful services whose loss would be catastrophic. Missing backup of these = -25 to Operational Resilience.",
+    "pvcs": [
+      "postgres-data",
+      "qdrant-storage",
+      "redis-data",
+      "neo4j-data",
+      "authelia-data",
+      "vaultwarden-data"
+    ]
+  },
+
+  "known_traps_to_check": {
+    "reverse_proxy_pod_port": true,
+    "post_dnat_egress": true,
+    "multi_namespace_bundle": true,
+    "missing_namespace_errors": true,
+    "node_exporter_textfile": true,
+    "prometheus_lastnotnull": true,
+    "host_validation_probe": true
+  }
+}
