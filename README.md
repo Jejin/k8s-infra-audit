@@ -143,4 +143,4 @@ Issues and PRs welcome at https://github.com/Jejin/k8s-infra-audit. Especially i
 
 ## Acknowledgements
 
-Built and battle-tested on **The Citadel**, a single-node ARM-based k3s homelab. The named anti-patterns each correspond to a real outage or near-miss. The example Citadel config (`examples/citadel.config.json`) shows what a "real" config looks like.
+Built and battle-tested on a single-node ARM-based k3s homelab. The named anti-patterns each correspond to a real outage or near-miss. The example config (`examples/xxx.config.json`) shows what a "real" config looks like.
