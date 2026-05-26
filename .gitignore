@@ -1,0 +1,29 @@
+# Audit outputs — never commit
+/tmp/
+*.tar.gz
+*.tsv
+k8s-audit-data-*/
+k8s-infra-audit-*.md
+
+# Local config (may contain cluster names, paths)
+.config/
+config.local.json
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Claude Code local state
+.claude/

@@ -1,0 +1,50 @@
+{
+  "_comment": "Working example: the homelab k3s cluster this plugin was built and battle-tested against. 'The Citadel' is an AI command center on a single-node ARM Grace+Blackwell box running ~16 namespaces.",
+
+  "cluster_name": "palladium / citadel.k8aas.com",
+  "cluster_context": "Single-node k3s 1.34 on ARM Grace+Blackwell. Network: Tailscale (mgmt plane, TCP protocols) + Traefik (data plane, HTTP/S) + Authelia 2FA. Secrets: SealedSecrets controller in kube-system; etcd AES-CBC encryption. Storage: local-path provisioner, no CSI. Backups: host-level CronJob system writing to Cloudflare R2 (only paid resource; cost target < $1/mo).",
+
+  "namespaces": {
+    "include": [
+      "the-*",
+      "caretta",
+      "velero"
+    ],
+    "exclude": []
+  },
+
+  "manifest_roots": [
+    "/home/athena/The-Citadel/the-forge",
+    "/home/athena/citadel-manifests"
+  ],
+
+  "report_dir": "/home/athena/.claude/plans",
+
+  "scoring_weights": {
+    "security": 0.35,
+    "resilience": 0.30,
+    "hygiene": 0.20,
+    "cost": 0.15
+  },
+
+  "critical_workloads": {
+    "pvcs": [
+      "postgres-data",
+      "qdrant-storage",
+      "redis-data",
+      "neo4j-data",
+      "authelia-data",
+      "vaultwarden-data"
+    ]
+  },
+
+  "known_traps_to_check": {
+    "reverse_proxy_pod_port": true,
+    "post_dnat_egress": true,
+    "multi_namespace_bundle": true,
+    "missing_namespace_errors": true,
+    "node_exporter_textfile": true,
+    "prometheus_lastnotnull": true,
+    "host_validation_probe": true
+  }
+}

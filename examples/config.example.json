@@ -1,0 +1,52 @@
+{
+  "_comment": "Copy to ~/.config/k8s-infra-audit/config.json and edit. All fields optional — omit any you don't want to set.",
+
+  "cluster_name": "my-cluster-name",
+  "cluster_context": "One-paragraph description of the cluster: distribution (k3s/EKS/GKE/etc.), notable architecture, network model, secrets approach, backup mechanism. The audit puts this verbatim into the engagement report context section.",
+
+  "namespaces": {
+    "_comment": "Either set 'include' to a list of namespace names / globs (e.g. 'app-*', 'platform'), OR leave include=null and use 'exclude' to subtract from the auto-discovered set.",
+    "include": null,
+    "exclude": [
+      "kube-system",
+      "kube-public",
+      "kube-node-lease",
+      "default",
+      "gpu-operator",
+      "metallb-system",
+      "cert-manager"
+    ]
+  },
+
+  "manifest_roots": [
+    "_comment: directories to search for source-of-truth YAML",
+    "/path/to/your/k8s/manifests",
+    "/path/to/your/helm/charts"
+  ],
+
+  "report_dir": "~/.claude/plans",
+
+  "scoring_weights": {
+    "_comment": "Must sum to 1.0. Override to bias the overall maturity score.",
+    "security": 0.35,
+    "resilience": 0.30,
+    "hygiene": 0.20,
+    "cost": 0.15
+  },
+
+  "critical_workloads": {
+    "_comment": "PVC names (without namespace) that the audit should treat as critical for the Operational Resilience score. Missing backup of these = -25 points each. Default heuristic = any StatefulSet-backed PVC.",
+    "pvcs": []
+  },
+
+  "known_traps_to_check": {
+    "_comment": "All true by default. Set to false to skip patterns that don't apply to your cluster.",
+    "reverse_proxy_pod_port": true,
+    "post_dnat_egress": true,
+    "multi_namespace_bundle": true,
+    "missing_namespace_errors": true,
+    "node_exporter_textfile": true,
+    "prometheus_lastnotnull": true,
+    "host_validation_probe": true
+  }
+}
