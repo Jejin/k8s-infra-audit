@@ -20,14 +20,30 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 OUTDIR="${REPORT_DIR}/k8s-audit-data-${TIMESTAMP}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-mkdir -p "$OUTDIR"
-
 echo "Kubernetes Infrastructure Audit — Data Collection"
 echo "  Output dir: $OUTDIR"
 echo "  kubectl:    $KUBECTL"
 echo "  Collector:  $(whoami)@$(hostname)"
 echo "  Started:    $(date -Iseconds)"
 echo
+
+# Pre-flight: confirm kubectl can reach the cluster before creating an empty
+# snapshot dir full of "(skipped)" markers
+if ! $KUBECTL get ns >/dev/null 2>&1; then
+  echo "FATAL: '$KUBECTL get ns' failed. Cluster unreachable or kubectl misconfigured." >&2
+  echo "  Diagnose:" >&2
+  echo "    1. \`$KUBECTL get ns\` from your shell — does it work?" >&2
+  echo "    2. Is KUBECONFIG set?  echo \$KUBECONFIG" >&2
+  echo "    3. On k3s default installs, kubeconfig is /etc/rancher/k3s/k3s.yaml," >&2
+  echo "       mode 0600 root-owned. Copy + chown then pin KUBECONFIG:" >&2
+  echo "         sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config" >&2
+  echo "         sudo chown \$(id -u):\$(id -g) ~/.kube/config" >&2
+  echo "         export KUBECONFIG=\$HOME/.kube/config" >&2
+  echo "    4. If cluster needs sudo: K8S_AUDIT_KUBECTL='sudo kubectl' bash audit_collect.sh" >&2
+  exit 1
+fi
+
+mkdir -p "$OUTDIR"
 
 # Helper: run kubectl, suppress noise, never fail the whole run
 run() {

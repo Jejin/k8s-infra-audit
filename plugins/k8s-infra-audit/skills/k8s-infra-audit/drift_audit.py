@@ -137,9 +137,24 @@ def discover_namespaces(cfg):
     """Return list of namespaces in scope, applying include/exclude rules."""
     out = sh(f"{cfg['kubectl']} get ns -o json")
     if not out.strip():
-        sys.stderr.write("FATAL: kubectl get ns returned nothing — is the cluster reachable?\n")
+        sys.stderr.write(
+            "FATAL: kubectl get ns returned nothing.\n"
+            "  Diagnose:\n"
+            "    1. `kubectl get ns` from your shell — does it work?\n"
+            "    2. Is KUBECONFIG set?  echo $KUBECONFIG\n"
+            "    3. On k3s default installs, kubeconfig is /etc/rancher/k3s/k3s.yaml,\n"
+            "       mode 0600 root-owned. Copy + chown then pin KUBECONFIG:\n"
+            "         sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config\n"
+            "         sudo chown $(id -u):$(id -g) ~/.kube/config\n"
+            "         export KUBECONFIG=$HOME/.kube/config\n"
+            "    4. If cluster needs sudo: K8S_AUDIT_KUBECTL='sudo kubectl' python3 drift_audit.py\n"
+        )
         sys.exit(1)
-    d = json.loads(out)
+    try:
+        d = json.loads(out)
+    except json.JSONDecodeError:
+        sys.stderr.write(f"FATAL: kubectl returned non-JSON. First 200 chars:\n  {out[:200]!r}\n")
+        sys.exit(1)
     all_ns = [n["metadata"]["name"] for n in d.get("items", [])]
     include = cfg["namespaces"]["include"]
     exclude = set(cfg["namespaces"].get("exclude", []))
